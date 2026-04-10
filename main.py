@@ -1,6 +1,8 @@
 import os
 import json
 import uuid
+import subprocess
+import tempfile
 from flask import Flask, render_template, request, jsonify, send_file
 import requests
 
@@ -91,16 +93,31 @@ def text_to_speech(text, character=""):
         f.write(response.content)
 
 def speech_to_text(audio_file):
-    headers_asr = {"Authorization": f"Bearer {API_KEY}"}
-    files = {"file": audio_file, "model": (None, "elm-asr")}
-    response = requests.post(
-        f"{BASE_URL}/v1/audio/transcriptions",
-        headers=headers_asr,
-        files=files,
-        timeout=30
-    )
-    print(f"[stt] status={response.status_code}")
-    return response.json()["text"]
+    with tempfile.NamedTemporaryFile(suffix=".input", delete=False) as tmp_in:
+        audio_file.save(tmp_in.name)
+        tmp_in_path = tmp_in.name
+
+    tmp_out_path = tmp_in_path + ".wav"
+    try:
+        subprocess.run(
+            ["ffmpeg", "-y", "-i", tmp_in_path, "-ar", "16000", "-ac", "1", "-f", "wav", tmp_out_path],
+            capture_output=True, timeout=30
+        )
+        headers_asr = {"Authorization": f"Bearer {API_KEY}"}
+        with open(tmp_out_path, "rb") as wav_file:
+            files = {"file": ("voice.wav", wav_file, "audio/wav"), "model": (None, "elm-asr")}
+            response = requests.post(
+                f"{BASE_URL}/v1/audio/transcriptions",
+                headers=headers_asr,
+                files=files,
+                timeout=30
+            )
+        print(f"[stt] status={response.status_code}, body={response.text[:200]}")
+        return response.json()["text"]
+    finally:
+        os.unlink(tmp_in_path)
+        if os.path.exists(tmp_out_path):
+            os.unlink(tmp_out_path)
 
 @app.route('/')
 def home():
