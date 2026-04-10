@@ -1,0 +1,37 @@
+{
+  "cd2830de": {
+    "character": "المعلم إبراهيم",
+    "age": 18,
+    "messages": [
+      {
+        "role": "assistant",
+        "content": "أهلاً! أنا المعلم إبراهيم. وش تبي تعرف؟"
+      },
+      {
+        "role": "user",
+        "content": ""
+      },
+      {
+        "role": "assistant",
+        "content": "عذراً، صار خطأ في الصوت."
+      },
+      {
+        "role": "user",
+        "content": ""
+      },
+      {
+        "role": "assistant",
+        "content": "عذراً، صار خطأ في الصوت."
+      },
+      {
+        "role": "user",
+        "content": ""
+      },
+      {
+        "role": "assistant",
+        "content": "عذراً، صار خطأ في الصوت."
+      }
+    ],
+    "location": "الدرعية"
+  }
+}

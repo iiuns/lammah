@@ -353,26 +353,34 @@ async function startRecording(){
   if(isRecording) return;
   isRecording = true;
   var stream = await navigator.mediaDevices.getUserMedia({audio:true});
-  mediaRecorder = new MediaRecorder(stream);
+  var mimeType = MediaRecorder.isTypeSupported('audio/webm') ? 'audio/webm' :
+                 MediaRecorder.isTypeSupported('audio/ogg') ? 'audio/ogg' : 'audio/mp4';
+  mediaRecorder = new MediaRecorder(stream, {mimeType: mimeType});
   audioChunks = [];
-  mediaRecorder.ondataavailable = function(e){ audioChunks.push(e.data); };
+  mediaRecorder.ondataavailable = function(e){ if(e.data.size>0) audioChunks.push(e.data); };
   mediaRecorder.onstop = async function(){
     isRecording = false;
-    var blob = new Blob(audioChunks,{type:'audio/wav'});
+    stream.getTracks().forEach(function(t){ t.stop(); });
+    var ext = mimeType.includes('ogg') ? 'ogg' : mimeType.includes('mp4') ? 'mp4' : 'webm';
+    var blob = new Blob(audioChunks, {type: mimeType});
     var form = new FormData();
-    form.append('audio',blob,'voice.wav');
-    form.append('age',userAge);
-    form.append('character',currentChar);
-    var res = await fetch('/ask-voice',{method:'POST',body:form});
-    var data = await res.json();
-    addMessage('user',data.question);
-    addMessage('char',data.reply);
-    new Audio('/audio').play();
-    document.getElementById('anotherBtn').style.display='block';
-    document.getElementById('saveBtn').style.display='block';
+    form.append('audio', blob, 'voice.'+ext);
+    form.append('age', userAge);
+    form.append('character', currentChar);
+    try {
+      var res = await fetch('/ask-voice',{method:'POST',body:form});
+      var data = await res.json();
+      if(data.question) addMessage('user', data.question);
+      addMessage('char', data.reply);
+      new Audio('/audio').play();
+      document.getElementById('anotherBtn').style.display='block';
+      document.getElementById('saveBtn').style.display='block';
+    } catch(err) {
+      alert('صار خطأ في الصوت، جرب اكتب سؤالك بدل ما تسجله');
+    }
   };
   mediaRecorder.start();
-  setTimeout(function(){ mediaRecorder.stop(); },5000);
+  setTimeout(function(){ mediaRecorder.stop(); }, 5000);
   alert('سجل سؤالك - 5 ثواني');
 }
 </script>

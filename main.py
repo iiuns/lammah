@@ -66,7 +66,7 @@ def ask_nuha(question, age, character):
     return data["choices"][0]["message"]["content"]
 
 def text_to_speech(text):
-    payload = {"model": "elm-tts", "input": text}
+    payload = {"model": "elm-tts", "input": text, "voice": "alloy"}
     response = requests.post(
         f"{BASE_URL}/v1/audio/speech",
         headers=HEADERS,
@@ -74,6 +74,8 @@ def text_to_speech(text):
         timeout=30
     )
     print(f"[tts] status={response.status_code}, size={len(response.content)}")
+    if response.status_code != 200:
+        raise ValueError(f"TTS error {response.status_code}: {response.text}")
     with open("reply.mp3", "wb") as f:
         f.write(response.content)
 
