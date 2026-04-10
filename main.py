@@ -55,17 +55,25 @@ def ask_nuha(question, age, character):
     response = requests.post(
         f"{BASE_URL}/v1/chat/completions",
         headers=HEADERS,
-        json=payload
+        json=payload,
+        timeout=30
     )
-    return response.json()["choices"][0]["message"]["content"]
+    print(f"[ask_nuha] status={response.status_code}")
+    data = response.json()
+    if "choices" not in data:
+        print(f"[ask_nuha] unexpected response: {data}")
+        raise ValueError(f"API error: {data}")
+    return data["choices"][0]["message"]["content"]
 
 def text_to_speech(text):
     payload = {"model": "elm-tts", "input": text}
     response = requests.post(
         f"{BASE_URL}/v1/audio/speech",
         headers=HEADERS,
-        json=payload
+        json=payload,
+        timeout=30
     )
+    print(f"[tts] status={response.status_code}, size={len(response.content)}")
     with open("reply.mp3", "wb") as f:
         f.write(response.content)
 
@@ -75,8 +83,10 @@ def speech_to_text(audio_file):
     response = requests.post(
         f"{BASE_URL}/v1/audio/transcriptions",
         headers=headers_asr,
-        files=files
+        files=files,
+        timeout=30
     )
+    print(f"[stt] status={response.status_code}")
     return response.json()["text"]
 
 @app.route('/')
@@ -85,23 +95,31 @@ def home():
 
 @app.route('/ask', methods=['POST'])
 def ask():
-    data = request.json
-    age = data['age']
-    question = data['question']
-    character = data.get('character', 'أبو سعد التاجر، تاجر عريق من الدرعية في القرن الثامن عشر')
-    reply = ask_nuha(question, age, character)
-    text_to_speech(reply)
-    return jsonify({"reply": reply})
+    try:
+        data = request.json
+        age = data['age']
+        question = data['question']
+        character = data.get('character', 'أبو سعد التاجر، تاجر عريق من الدرعية في القرن الثامن عشر')
+        reply = ask_nuha(question, age, character)
+        text_to_speech(reply)
+        return jsonify({"reply": reply})
+    except Exception as e:
+        print(f"[/ask] error: {e}")
+        return jsonify({"error": str(e), "reply": "عذراً، صار خطأ. تأكد من المفتاح وحاول مرة ثانية."}), 500
 
 @app.route('/ask-voice', methods=['POST'])
 def ask_voice():
-    age = int(request.form['age'])
-    character = request.form.get('character', 'أبو سعد التاجر')
-    audio = request.files['audio']
-    question = speech_to_text(audio)
-    reply = ask_nuha(question, age, character)
-    text_to_speech(reply)
-    return jsonify({"reply": reply, "question": question})
+    try:
+        age = int(request.form['age'])
+        character = request.form.get('character', 'أبو سعد التاجر')
+        audio = request.files['audio']
+        question = speech_to_text(audio)
+        reply = ask_nuha(question, age, character)
+        text_to_speech(reply)
+        return jsonify({"reply": reply, "question": question})
+    except Exception as e:
+        print(f"[/ask-voice] error: {e}")
+        return jsonify({"error": str(e), "reply": "عذراً، صار خطأ في الصوت.", "question": ""}), 500
 
 @app.route('/audio')
 def audio():
