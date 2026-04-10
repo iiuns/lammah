@@ -285,14 +285,25 @@ function selectChar(charFull,charName,emoji,el){
   el.classList.add('sel');
 }
 
-function startChat(){
+async function startChat(){
   document.getElementById('chatAvatar').textContent = currentCharEmoji;
   document.getElementById('chatName').textContent = currentCharName;
   document.getElementById('agePill').textContent = userAge+' سنة';
   document.getElementById('chatMessages').innerHTML = '';
   messages = [];
   showScreen('screen-chat');
-  addMessage('char','أهلاً! أنا '+currentCharName+'. وش تبي تعرف؟');
+  try {
+    var res = await fetch('/greet', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({character: currentChar, character_name: currentCharName})
+    });
+    var data = await res.json();
+    addMessage('char', data.greeting);
+    new Audio('/audio?t=' + Date.now()).play();
+  } catch(e) {
+    addMessage('char', 'أهلاً! أنا ' + currentCharName + '. وش تبي تعرف؟');
+  }
 }
 
 function addMessage(type,text){
@@ -304,7 +315,8 @@ function addMessage(type,text){
     var sound = document.createElement('div');
     sound.className = 'sound-row';
     sound.innerHTML = '<span>🔊 استمع</span>';
-    sound.onclick = function(){ new Audio('/audio').play(); };
+    var audioUrl = '/audio?t=' + Date.now();
+    sound.onclick = function(){ new Audio(audioUrl).play(); };
     document.getElementById('chatMessages').appendChild(sound);
   }
   document.getElementById('chatMessages').scrollTop = 99999;
@@ -328,7 +340,7 @@ async function sendQuestion(){
   var t = document.getElementById('typing');
   if(t) t.remove();
   addMessage('char',data.reply);
-  new Audio('/audio').play();
+  new Audio('/audio?t=' + Date.now()).play();
   document.getElementById('anotherBtn').style.display='block';
   document.getElementById('saveBtn').style.display='block';
 }
@@ -372,7 +384,7 @@ async function startRecording(){
       var data = await res.json();
       if(data.question) addMessage('user', data.question);
       addMessage('char', data.reply);
-      new Audio('/audio').play();
+      new Audio('/audio?t=' + Date.now()).play();
       document.getElementById('anotherBtn').style.display='block';
       document.getElementById('saveBtn').style.display='block';
     } catch(err) {

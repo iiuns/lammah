@@ -123,6 +123,19 @@ def speech_to_text(audio_file):
 def home():
     return render_template('index.html')
 
+@app.route('/greet', methods=['POST'])
+def greet():
+    try:
+        data = request.json
+        character = data.get('character', 'أبو سعد التاجر')
+        character_name = data.get('character_name', 'أبو سعد التاجر')
+        greeting = f"أهلاً! أنا {character_name}. وش تبي تعرف؟"
+        text_to_speech(greeting, character)
+        return jsonify({"greeting": greeting})
+    except Exception as e:
+        print(f"[/greet] error: {e}")
+        return jsonify({"greeting": f"أهلاً! أنا {data.get('character_name','')}. وش تبي تعرف؟"}), 200
+
 @app.route('/ask', methods=['POST'])
 def ask():
     try:
