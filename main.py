@@ -123,6 +123,23 @@ def speech_to_text(audio_file):
 def home():
     return render_template('index.html')
 
+@app.route('/narrate', methods=['POST'])
+def narrate():
+    try:
+        data = request.json
+        text = data.get('text', '')
+        voice = data.get('voice', 'shimmer')
+        payload = {"model": "elm-tts", "input": text, "voice": voice}
+        response = requests.post(f"{BASE_URL}/v1/audio/speech", headers=HEADERS, json=payload, timeout=30)
+        if response.status_code != 200:
+            return jsonify({"error": "tts failed"}), 500
+        with open("reply.mp3", "wb") as f:
+            f.write(response.content)
+        return jsonify({"ok": True})
+    except Exception as e:
+        print(f"[/narrate] error: {e}")
+        return jsonify({"error": str(e)}), 500
+
 @app.route('/greet', methods=['POST'])
 def greet():
     try:

@@ -128,8 +128,7 @@ body{background:#F7F2EA;font-family:'Tajawal',sans-serif;min-height:100vh;displa
   <div class="welcome-body">
     <div class="welcome-title">تحدث لتبدأ رحلتك التاريخية</div>
     <div class="welcome-sub">تواصل مع شخصيات عاشت في هذا المكان واسمع قصصهم، مخصصة لك أنت</div>
-    <button class="btn-gold" onclick="showScreen('screen-age')">ابدأ التجربة</button>
-    <div class="voice-hint">🎤 أو تحدث بصوتك للبدء</div>
+    <button class="btn-gold" onclick="goToAge()">ابدأ التجربة</button>
   </div>
 </div>
 
@@ -261,6 +260,18 @@ function showScreen(id){
 
 function openMenu(){ document.getElementById('menuOverlay').classList.add('open'); }
 function closeMenu(){ document.getElementById('menuOverlay').classList.remove('open'); }
+
+async function goToAge(){
+  showScreen('screen-age');
+  try {
+    await fetch('/narrate', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({text: 'كم عمرك؟ اختر الفئة المناسبة لك حتى نخصص لك تجربة تناسبك', voice: 'shimmer'})
+    });
+    new Audio('/audio?t=' + Date.now()).play();
+  } catch(e) {}
+}
 
 function selectAge(age,el){
   userAge = age;
