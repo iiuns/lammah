@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html dir="rtl" lang="ar">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>لمّاح - محادثة محفوظة</title>
+<link href="https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=Tajawal:wght@300;400;500;700&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:#F7F2EA;font-family:'Tajawal',sans-serif;min-height:100vh;display:flex;flex-direction:column;align-items:center}
+.container{width:100%;max-width:420px;min-height:100vh;display:flex;flex-direction:column}
+.header{background:#2C1A08;padding:.85rem 1.2rem;display:flex;align-items:center;gap:.75rem}
+.header-title{font-family:'Amiri',serif;color:#C8962E;font-size:1.1rem}
+.header-sub{font-size:.7rem;color:#F5E6C8;opacity:.6}
+.messages{flex:1;padding:1rem;display:flex;flex-direction:column;gap:.85rem;overflow-y:auto}
+.msg-char{background:white;border-radius:0 14px 14px 14px;padding:.8rem 1rem;font-size:.87rem;line-height:1.75;color:#2C1A08;max-width:88%;box-shadow:0 1px 4px rgba(0,0,0,0.06)}
+.msg-user{background:#C8962E;border-radius:14px 0 14px 14px;padding:.7rem 1rem;font-size:.87rem;color:white;max-width:78%;align-self:flex-start}
+.footer{padding:1rem;text-align:center}
+.footer a{color:#C8962E;font-size:.85rem;text-decoration:none}
+</style>
+</head>
+<body>
+<div class="container">
+  <div class="header">
+    <div>
+      <div class="header-title">{{ chat.character }}</div>
+      <div class="header-sub">{{ chat.location }} • {{ chat.age }} سنة</div>
+    </div>
+  </div>
+  <div class="messages">
+    {% for msg in chat.messages %}
+      <div class="{{ 'msg-char' if msg.role == 'assistant' else 'msg-user' }}">{{ msg.content }}</div>
+    {% endfor %}
+  </div>
+  <div class="footer">
+    <a href="/">ابدأ محادثتك الخاصة ←</a>
+  </div>
+</div>
+</body>
+</html>

@@ -1,0 +1,380 @@
+<!DOCTYPE html>
+<html dir="rtl" lang="ar">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>لمّاح</title>
+<link href="https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=Tajawal:wght@300;400;500;700&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:#F7F2EA;font-family:'Tajawal',sans-serif;min-height:100vh;display:flex;flex-direction:column;align-items:center}
+.screen{display:none;width:100%;max-width:420px;min-height:100vh;flex-direction:column}
+.screen.active{display:flex}
+.hero{position:relative;height:55vh;overflow:hidden}
+.hero img{width:100%;height:100%;object-fit:cover}
+.hero-overlay{position:absolute;inset:0;background:linear-gradient(to bottom,rgba(0,0,0,0.2),rgba(0,0,0,0.65))}
+.hero-nav{position:absolute;top:0;left:0;right:0;padding:1rem 1.2rem;display:flex;justify-content:space-between;align-items:center;z-index:2}
+.hamburger{display:flex;flex-direction:column;gap:5px;cursor:pointer;padding:.3rem}
+.hamburger span{width:22px;height:2px;background:white;border-radius:2px;display:block}
+.hero-logo{height:38px;object-fit:contain}
+.hero-text{position:absolute;bottom:1.5rem;right:1.2rem;z-index:2;text-align:right}
+.hero-tag{font-size:.72rem;color:#C8962E;letter-spacing:.05em;margin-bottom:.3rem}
+.hero-headline{font-size:1.5rem;color:white;font-family:'Amiri',serif;line-height:1.3}
+.dots{display:flex;gap:5px;justify-content:center;padding:.7rem;background:#F0EAE0}
+.dot{width:6px;height:6px;border-radius:50%;background:rgba(139,111,78,0.25);transition:all .3s}
+.dot.active{background:#C8962E;width:18px;border-radius:3px}
+.welcome-body{padding:1.5rem 1.2rem;flex:1;display:flex;flex-direction:column;gap:1rem}
+.welcome-title{font-family:'Amiri',serif;font-size:1.25rem;color:#2C1A08}
+.welcome-sub{font-size:.85rem;color:#8B6F4E;line-height:1.7}
+.btn-gold{background:#C8962E;color:white;border:none;border-radius:14px;padding:.9rem;font-size:.95rem;font-family:'Tajawal',sans-serif;font-weight:500;width:100%;cursor:pointer}
+.btn-gold:hover{background:#B8852A}
+.voice-hint{text-align:center;font-size:.75rem;color:#8B6F4E;padding:.5rem}
+.menu-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:100;display:none}
+.menu-overlay.open{display:block}
+.menu-panel{position:absolute;top:0;right:0;width:75%;max-width:300px;height:100%;background:#2C1A08;padding:1.5rem 1.2rem;display:flex;flex-direction:column}
+.menu-close{color:#C8962E;font-size:1.3rem;cursor:pointer;margin-bottom:1.5rem;text-align:left}
+.menu-logo{height:30px;filter:brightness(0) invert(1);margin-bottom:2rem}
+.menu-item{padding:.9rem 0;border-bottom:1px solid rgba(200,150,46,0.12);color:#F5E6C8;font-size:.9rem;display:flex;align-items:center;gap:.75rem;cursor:pointer}
+.menu-item span{color:#C8962E}
+.menu-section{font-size:.65rem;color:#C8962E;opacity:.6;letter-spacing:.1em;margin:1.2rem 0 .6rem}
+.chips{display:flex;gap:.5rem;flex-wrap:wrap}
+.chip{background:rgba(200,150,46,0.12);border:1px solid rgba(200,150,46,0.25);border-radius:20px;padding:.3rem .8rem;font-size:.75rem;color:#C8962E}
+.chip.active{background:#C8962E;color:#2C1A08}
+.age-header{background:#2C1A08;padding:.85rem 1.2rem;display:flex;align-items:center;gap:.75rem}
+.back-btn{color:#C8962E;cursor:pointer;font-size:1.1rem}
+.age-body{padding:1.2rem;flex:1;display:flex;flex-direction:column;gap:1rem}
+.age-img{width:100%;height:160px;object-fit:cover;border-radius:14px}
+.screen-title{font-family:'Amiri',serif;font-size:1.2rem;color:#2C1A08}
+.screen-sub{font-size:.8rem;color:#8B6F4E}
+.age-grid{display:grid;grid-template-columns:1fr 1fr;gap:.6rem}
+.age-card{background:white;border:1.5px solid rgba(139,111,78,0.18);border-radius:12px;padding:.85rem .6rem;text-align:center;cursor:pointer;transition:all .2s}
+.age-card:hover,.age-card.sel{border-color:#C8962E;background:rgba(200,150,46,0.06)}
+.age-range{font-size:.85rem;font-weight:500;color:#2C1A08}
+.age-desc{font-size:.68rem;color:#8B6F4E;margin-top:.2rem}
+.divider-text{text-align:center;font-size:.75rem;color:#8B6F4E}
+.age-input{width:100%;background:white;border:1.5px solid rgba(139,111,78,0.2);border-radius:10px;padding:.7rem 1rem;font-size:.9rem;color:#2C1A08;font-family:'Tajawal',sans-serif}
+.char-body{padding:1.2rem;flex:1;display:flex;flex-direction:column;gap:1rem}
+.chars-grid{display:flex;flex-direction:column;gap:.7rem}
+.char-card{background:white;border:1.5px solid rgba(139,111,78,0.18);border-radius:14px;padding:1rem 1.1rem;display:flex;align-items:center;gap:1rem;cursor:pointer;transition:all .2s}
+.char-card:hover,.char-card.sel{border-color:#C8962E;background:rgba(200,150,46,0.05)}
+.char-avatar{width:48px;height:48px;border-radius:50%;border:1.5px solid rgba(200,150,46,0.3);display:flex;align-items:center;justify-content:center;font-size:1.4rem;background:rgba(200,150,46,0.08)}
+.char-name{font-size:.92rem;font-weight:500;color:#2C1A08}
+.char-role{font-size:.72rem;color:#8B6F4E;margin-top:.2rem}
+.chat-header{background:#2C1A08;padding:.85rem 1.2rem;display:flex;align-items:center;gap:.75rem}
+.char-av-sm{width:36px;height:36px;border-radius:50%;border:1.5px solid #C8962E;display:flex;align-items:center;justify-content:center;font-size:1rem;background:rgba(200,150,46,0.1);flex-shrink:0}
+.char-info-name{font-size:.88rem;font-weight:500;color:#C8962E}
+.char-info-sub{font-size:.65rem;color:#F5E6C8;opacity:.6}
+.age-pill{background:rgba(200,150,46,0.15);border:1px solid rgba(200,150,46,0.3);border-radius:20px;padding:.15rem .6rem;font-size:.65rem;color:#C8962E;margin-right:auto}
+.chat-messages{flex:1;padding:1rem;display:flex;flex-direction:column;gap:.85rem;overflow-y:auto;background:#F7F2EA}
+.msg-char{background:white;border-radius:0 14px 14px 14px;padding:.8rem 1rem;font-size:.87rem;line-height:1.75;color:#2C1A08;max-width:88%;box-shadow:0 1px 4px rgba(0,0,0,0.06)}
+.msg-user{background:#C8962E;border-radius:14px 0 14px 14px;padding:.7rem 1rem;font-size:.87rem;color:white;max-width:78%;align-self:flex-start}
+.sound-row{display:flex;align-items:center;gap:.4rem;padding:.35rem .7rem;background:rgba(200,150,46,0.1);border-radius:20px;width:fit-content;cursor:pointer}
+.sound-row span{font-size:.7rem;color:#C8962E}
+.typing{display:flex;gap:4px;align-items:center;padding:.8rem 1rem;background:white;border-radius:0 14px 14px 14px;width:fit-content}
+.typing-dot{width:7px;height:7px;background:#C8962E;border-radius:50%;opacity:.4;animation:pulse 1.2s ease-in-out infinite}
+.typing-dot:nth-child(2){animation-delay:.2s}
+.typing-dot:nth-child(3){animation-delay:.4s}
+@keyframes pulse{0%,100%{opacity:.2;transform:scale(1)}50%{opacity:1;transform:scale(1.2)}}
+.chat-footer{background:white;border-top:1px solid rgba(139,111,78,0.1);padding:.75rem 1rem;display:flex;gap:.5rem;align-items:center}
+.chat-inp{flex:1;background:#F7F2EA;border:none;border-radius:20px;padding:.6rem 1rem;font-size:.85rem;color:#2C1A08;font-family:'Tajawal',sans-serif;outline:none}
+.mic-btn{width:36px;height:36px;border-radius:50%;background:#C8962E;border:none;display:flex;align-items:center;justify-content:center;font-size:.9rem;cursor:pointer;flex-shrink:0}
+.send-btn{width:36px;height:36px;border-radius:50%;background:#2C1A08;border:none;display:flex;align-items:center;justify-content:center;color:#C8962E;font-size:.85rem;cursor:pointer;flex-shrink:0}
+.another-btn{background:transparent;border:1px solid rgba(200,150,46,0.4);color:#C8962E;border-radius:10px;padding:.6rem;font-size:.82rem;font-family:'Tajawal',sans-serif;width:calc(100% - 2rem);cursor:pointer;margin:.5rem 1rem 0}
+.qr-screen{background:#F7F2EA;padding:1.5rem 1.2rem;flex:1;display:flex;flex-direction:column;align-items:center;gap:1.2rem;text-align:center}
+.qr-box{background:white;border-radius:20px;padding:1.5rem;box-shadow:0 4px 20px rgba(0,0,0,0.08)}
+.qr-title{font-family:'Amiri',serif;font-size:1.2rem;color:#2C1A08}
+.qr-sub{font-size:.8rem;color:#8B6F4E;line-height:1.6}
+.qr-link{font-size:.72rem;color:#C8962E;word-break:break-all;padding:.5rem;background:rgba(200,150,46,0.08);border-radius:8px;width:100%}
+</style>
+</head>
+<body>
+
+<div class="menu-overlay" id="menuOverlay" onclick="closeMenu()">
+  <div class="menu-panel" onclick="event.stopPropagation()">
+    <div class="menu-close" onclick="closeMenu()">✕</div>
+    <div style="font-family:'Amiri',serif;font-size:1.5rem;color:#C8962E;margin-bottom:2rem">لمّاح</div>
+    <div class="menu-item"><span>🌐</span> تغيير اللغة</div>
+    <div class="menu-item"><span>💬</span> تواصل معنا</div>
+    <div class="menu-section">المواقع المدعومة</div>
+    <div class="chips">
+      <div class="chip active">الدرعية</div>
+      <div class="chip">العُلا</div>
+      <div class="chip" style="opacity:.5">قريباً...</div>
+    </div>
+  </div>
+</div>
+
+<div class="screen active" id="screen-welcome">
+  <div class="hero">
+    <img src="/static/img1.jpg" id="heroImg" alt="">
+    <div class="hero-overlay"></div>
+    <div class="hero-nav">
+      <div class="hamburger" onclick="openMenu()">
+        <span></span><span></span><span></span>
+      </div>
+      <div style="font-family:'Amiri',serif;color:white;font-size:1.3rem">لمّاح</div>
+      <div style="width:28px"></div>
+    </div>
+    <div class="hero-text">
+      <div class="hero-tag">اكتشف</div>
+      <div class="hero-headline">تراثنا يحكي<br>وأنت تسمع</div>
+    </div>
+  </div>
+  <div class="dots">
+    <div class="dot active" id="dot0"></div>
+    <div class="dot" id="dot1"></div>
+    <div class="dot" id="dot2"></div>
+  </div>
+  <div class="welcome-body">
+    <div class="welcome-title">تحدث لتبدأ رحلتك التاريخية</div>
+    <div class="welcome-sub">تواصل مع شخصيات عاشت في هذا المكان واسمع قصصهم، مخصصة لك أنت</div>
+    <button class="btn-gold" onclick="showScreen('screen-age')">ابدأ التجربة</button>
+    <div class="voice-hint">🎤 أو تحدث بصوتك للبدء</div>
+  </div>
+</div>
+
+<div class="screen" id="screen-age">
+  <div class="age-header">
+    <div class="back-btn" onclick="showScreen('screen-welcome')">→</div>
+    <div style="font-family:'Amiri',serif;color:#C8962E;font-size:1rem">لمّاح</div>
+  </div>
+  <div class="age-body">
+    <div class="screen-title">كم عمرك؟</div>
+    <div class="screen-sub">سنخصص لك تجربة تناسبك</div>
+    <div class="age-grid">
+      <div class="age-card" onclick="selectAge(10,this)">
+        <div class="age-range">أقل من 15</div>
+        <div class="age-desc">ممتعة ومبسطة</div>
+      </div>
+      <div class="age-card" onclick="selectAge(18,this)">
+        <div class="age-range">15 — 22</div>
+        <div class="age-desc">واضحة وشيقة</div>
+      </div>
+      <div class="age-card" onclick="selectAge(30,this)">
+        <div class="age-range">23 — 37</div>
+        <div class="age-desc">علمية وكافية</div>
+      </div>
+      <div class="age-card" onclick="selectAge(50,this)">
+        <div class="age-range">38 وما فوق</div>
+        <div class="age-desc">مفصلة وعميقة</div>
+      </div>
+    </div>
+    <div class="divider-text">— أو اكتب عمرك —</div>
+    <input class="age-input" type="number" id="ageInput" placeholder="مثال: 25">
+    <button class="btn-gold" onclick="goToChar()">التالي</button>
+  </div>
+</div>
+
+<div class="screen" id="screen-char">
+  <div class="age-header">
+    <div class="back-btn" onclick="showScreen('screen-age')">→</div>
+    <div style="font-family:'Amiri',serif;color:#C8962E;font-size:1rem">اختر شخصيتك</div>
+  </div>
+  <div class="char-body">
+    <div class="screen-sub">كل شخصية تحكيلك قصة مختلفة</div>
+    <div class="chars-grid">
+      <div class="char-card" onclick="selectChar('أبو سعد التاجر، تاجر عريق من الدرعية في القرن الثامن عشر','أبو سعد التاجر','🧔',this)">
+        <div class="char-avatar">🧔</div>
+        <div>
+          <div class="char-name">أبو سعد التاجر</div>
+          <div class="char-role">تاجر عريق — الدرعية</div>
+        </div>
+      </div>
+      <div class="char-card" onclick="selectChar('المعلم إبراهيم، معماري بنى قصور الدرعية بالطين والحجر','المعلم إبراهيم','👷',this)">
+        <div class="char-avatar">👷</div>
+        <div>
+          <div class="char-name">المعلم إبراهيم</div>
+          <div class="char-role">معماري — الدرعية</div>
+        </div>
+      </div>
+      <div class="char-card" onclick="selectChar('الأمير سعود، من مؤسسي الدولة السعودية الأولى','الأمير سعود','👑',this)">
+        <div class="char-avatar">👑</div>
+        <div>
+          <div class="char-name">الأمير سعود</div>
+          <div class="char-role">من المؤسسين — الدرعية</div>
+        </div>
+      </div>
+    </div>
+    <button class="btn-gold" onclick="startChat()">ابدأ المحادثة</button>
+  </div>
+</div>
+
+<div class="screen" id="screen-chat">
+  <div class="chat-header">
+    <div class="char-av-sm" id="chatAvatar">🧔</div>
+    <div>
+      <div class="char-info-name" id="chatName">أبو سعد التاجر</div>
+      <div class="char-info-sub">الدرعية التاريخية</div>
+    </div>
+    <div class="age-pill" id="agePill">25 سنة</div>
+  </div>
+  <div class="chat-messages" id="chatMessages"></div>
+  <button class="another-btn" id="anotherBtn" style="display:none" onclick="askAnother()">هل عندك سؤال ثاني؟</button>
+  <button class="another-btn" id="saveBtn" style="display:none;border-color:#2C1A08;color:#2C1A08" onclick="saveChat()">احفظ المحادثة واحصل على باركود</button>
+  <div class="chat-footer">
+    <button class="mic-btn" onclick="startRecording()">🎤</button>
+    <input class="chat-inp" id="chatInput" placeholder="اكتب سؤالك..." onkeydown="if(event.key==='Enter')sendQuestion()">
+    <button class="send-btn" onclick="sendQuestion()">←</button>
+  </div>
+</div>
+
+<div class="screen" id="screen-qr">
+  <div class="age-header">
+    <div class="back-btn" onclick="showScreen('screen-chat')">→</div>
+    <div style="font-family:'Amiri',serif;color:#C8962E;font-size:1rem">قصتك محفوظة</div>
+  </div>
+  <div class="qr-screen">
+    <div class="qr-title">امسح الباركود لتشوف قصتك</div>
+    <div class="qr-sub">شاركه مع أهلك أو احفظه ذكرى من زيارتك</div>
+    <div class="qr-box">
+      <div id="qrCanvas"></div>
+    </div>
+    <div class="qr-link" id="qrLink"></div>
+    <button class="btn-gold" onclick="showScreen('screen-welcome')">ابدأ محادثة جديدة</button>
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<script>
+var userAge = 25;
+var currentChar = 'أبو سعد التاجر، تاجر عريق من الدرعية';
+var currentCharName = 'أبو سعد التاجر';
+var currentCharEmoji = '🧔';
+var messages = [];
+var isRecording = false;
+var mediaRecorder;
+var audioChunks = [];
+
+var images = ['/static/img1.jpg','/static/img2.jpg','/static/img3.jpg'];
+var imgIndex = 0;
+setInterval(function(){
+  imgIndex = (imgIndex+1)%3;
+  document.getElementById('heroImg').src = images[imgIndex];
+  for(var i=0;i<3;i++) document.getElementById('dot'+i).className = 'dot'+(i===imgIndex?' active':'');
+},4000);
+
+function showScreen(id){
+  var screens = document.querySelectorAll('.screen');
+  for(var i=0;i<screens.length;i++) screens[i].classList.remove('active');
+  document.getElementById(id).classList.add('active');
+}
+
+function openMenu(){ document.getElementById('menuOverlay').classList.add('open'); }
+function closeMenu(){ document.getElementById('menuOverlay').classList.remove('open'); }
+
+function selectAge(age,el){
+  userAge = age;
+  var cards = document.querySelectorAll('.age-card');
+  for(var i=0;i<cards.length;i++) cards[i].classList.remove('sel');
+  el.classList.add('sel');
+  document.getElementById('ageInput').value = age;
+}
+
+function goToChar(){
+  var inp = document.getElementById('ageInput').value;
+  if(inp) userAge = parseInt(inp);
+  showScreen('screen-char');
+}
+
+function selectChar(charFull,charName,emoji,el){
+  currentChar = charFull;
+  currentCharName = charName;
+  currentCharEmoji = emoji;
+  var cards = document.querySelectorAll('.char-card');
+  for(var i=0;i<cards.length;i++) cards[i].classList.remove('sel');
+  el.classList.add('sel');
+}
+
+function startChat(){
+  document.getElementById('chatAvatar').textContent = currentCharEmoji;
+  document.getElementById('chatName').textContent = currentCharName;
+  document.getElementById('agePill').textContent = userAge+' سنة';
+  document.getElementById('chatMessages').innerHTML = '';
+  messages = [];
+  showScreen('screen-chat');
+  addMessage('char','أهلاً! أنا '+currentCharName+'. وش تبي تعرف؟');
+}
+
+function addMessage(type,text){
+  var div = document.createElement('div');
+  div.className = type==='char' ? 'msg-char' : 'msg-user';
+  div.textContent = text;
+  document.getElementById('chatMessages').appendChild(div);
+  if(type==='char'){
+    var sound = document.createElement('div');
+    sound.className = 'sound-row';
+    sound.innerHTML = '<span>🔊 استمع</span>';
+    sound.onclick = function(){ new Audio('/audio').play(); };
+    document.getElementById('chatMessages').appendChild(sound);
+  }
+  document.getElementById('chatMessages').scrollTop = 99999;
+  messages.push({role: type==='char'?'assistant':'user', content: text});
+}
+
+async function sendQuestion(){
+  var q = document.getElementById('chatInput').value.trim();
+  if(!q) return;
+  document.getElementById('chatInput').value = '';
+  addMessage('user',q);
+  document.getElementById('anotherBtn').style.display='none';
+  document.getElementById('saveBtn').style.display='none';
+  var typing = document.createElement('div');
+  typing.className='typing';
+  typing.id='typing';
+  typing.innerHTML='<div class="typing-dot"></div><div class="typing-dot"></div><div class="typing-dot"></div>';
+  document.getElementById('chatMessages').appendChild(typing);
+  var res = await fetch('/ask',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({age:userAge,question:q,character:currentChar})});
+  var data = await res.json();
+  var t = document.getElementById('typing');
+  if(t) t.remove();
+  addMessage('char',data.reply);
+  new Audio('/audio').play();
+  document.getElementById('anotherBtn').style.display='block';
+  document.getElementById('saveBtn').style.display='block';
+}
+
+function askAnother(){
+  document.getElementById('anotherBtn').style.display='none';
+  document.getElementById('saveBtn').style.display='none';
+  document.getElementById('chatInput').focus();
+}
+
+async function saveChat(){
+  var res = await fetch('/save-chat',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({character:currentCharName,age:userAge,messages:messages,location:'الدرعية'})});
+  var data = await res.json();
+  var url = window.location.origin+'/chat/'+data.chat_id;
+  document.getElementById('qrLink').textContent = url;
+  document.getElementById('qrCanvas').innerHTML = '';
+  new QRCode(document.getElementById('qrCanvas'),{text:url,width:200,height:200,colorDark:'#2C1A08',colorLight:'#F7F2EA'});
+  showScreen('screen-qr');
+}
+
+async function startRecording(){
+  if(isRecording) return;
+  isRecording = true;
+  var stream = await navigator.mediaDevices.getUserMedia({audio:true});
+  mediaRecorder = new MediaRecorder(stream);
+  audioChunks = [];
+  mediaRecorder.ondataavailable = function(e){ audioChunks.push(e.data); };
+  mediaRecorder.onstop = async function(){
+    isRecording = false;
+    var blob = new Blob(audioChunks,{type:'audio/wav'});
+    var form = new FormData();
+    form.append('audio',blob,'voice.wav');
+    form.append('age',userAge);
+    form.append('character',currentChar);
+    var res = await fetch('/ask-voice',{method:'POST',body:form});
+    var data = await res.json();
+    addMessage('user',data.question);
+    addMessage('char',data.reply);
+    new Audio('/audio').play();
+    document.getElementById('anotherBtn').style.display='block';
+    document.getElementById('saveBtn').style.display='block';
+  };
+  mediaRecorder.start();
+  setTimeout(function(){ mediaRecorder.stop(); },5000);
+  alert('سجل سؤالك - 5 ثواني');
+}
+</script>
+</body>
+</html>
