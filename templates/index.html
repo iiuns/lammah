@@ -179,11 +179,11 @@ body{background:#F7F2EA;font-family:'Tajawal',sans-serif;min-height:100vh;displa
           <div class="char-role">تاجر عريق — الدرعية</div>
         </div>
       </div>
-      <div class="char-card" onclick="selectChar('المعلم إبراهيم، معماري بنى قصور الدرعية بالطين والحجر','المعلم إبراهيم','👷',this)">
-        <div class="char-avatar">👷</div>
+      <div class="char-card" onclick="selectChar('المعلمة نورة، مربية أجيال وعالمة من الدرعية في القرن الثامن عشر','المعلمة نورة','🏛️',this)">
+        <div class="char-avatar">🏛️</div>
         <div>
-          <div class="char-name">المعلم إبراهيم</div>
-          <div class="char-role">معماري — الدرعية</div>
+          <div class="char-name">المعلمة نورة</div>
+          <div class="char-role">مربية أجيال — الدرعية</div>
         </div>
       </div>
       <div class="char-card" onclick="selectChar('الأمير سعود، من مؤسسي الدولة السعودية الأولى','الأمير سعود','👑',this)">
@@ -264,12 +264,12 @@ function closeMenu(){ document.getElementById('menuOverlay').classList.remove('o
 async function goToAge(){
   showScreen('screen-age');
   try {
-    await fetch('/narrate', {
+    fetch('/narrate', {
       method: 'POST',
       headers: {'Content-Type': 'application/json'},
       body: JSON.stringify({text: 'كم عمرك؟ اختر الفئة المناسبة لك حتى نخصص لك تجربة تناسبك', voice: 'shimmer'})
     });
-    new Audio('/audio?t=' + Date.now()).play();
+    waitAndPlayAudio();
   } catch(e) {}
 }
 
@@ -311,7 +311,7 @@ async function startChat(){
     });
     var data = await res.json();
     addMessage('char', data.greeting);
-    new Audio('/audio?t=' + Date.now()).play();
+    waitAndPlayAudio();
   } catch(e) {
     addMessage('char', 'أهلاً! أنا ' + currentCharName + '. وش تبي تعرف؟');
   }
@@ -334,6 +334,13 @@ function addMessage(type,text){
   messages.push({role: type==='char'?'assistant':'user', content: text});
 }
 
+async function waitAndPlayAudio(){
+  try {
+    await fetch('/audio-ready');
+    new Audio('/audio?t=' + Date.now()).play();
+  } catch(e) {}
+}
+
 async function sendQuestion(){
   var q = document.getElementById('chatInput').value.trim();
   if(!q) return;
@@ -351,7 +358,7 @@ async function sendQuestion(){
   var t = document.getElementById('typing');
   if(t) t.remove();
   addMessage('char',data.reply);
-  new Audio('/audio?t=' + Date.now()).play();
+  waitAndPlayAudio();
   document.getElementById('anotherBtn').style.display='block';
   document.getElementById('saveBtn').style.display='block';
 }
@@ -395,7 +402,7 @@ async function startRecording(){
       var data = await res.json();
       if(data.question) addMessage('user', data.question);
       addMessage('char', data.reply);
-      new Audio('/audio?t=' + Date.now()).play();
+      waitAndPlayAudio();
       document.getElementById('anotherBtn').style.display='block';
       document.getElementById('saveBtn').style.display='block';
     } catch(err) {

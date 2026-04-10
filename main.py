@@ -3,6 +3,7 @@ import json
 import uuid
 import subprocess
 import tempfile
+import threading
 from flask import Flask, render_template, request, jsonify, send_file
 import requests
 
@@ -16,6 +17,8 @@ HEADERS = {
 }
 
 CHATS_FILE = "chats.json"
+tts_event = threading.Event()
+tts_event.set()
 
 def load_chats():
     if os.path.exists(CHATS_FILE):
@@ -63,7 +66,6 @@ def ask_nuha(question, age, character):
     print(f"[ask_nuha] status={response.status_code}")
     data = response.json()
     if "choices" not in data:
-        print(f"[ask_nuha] unexpected response: {data}")
         raise ValueError(f"API error: {data}")
     return data["choices"][0]["message"]["content"]
 
@@ -73,12 +75,13 @@ CHAR_VOICES = {
     "الأمير سعود": "fable",
 }
 
-def text_to_speech(text, character=""):
-    voice = "onyx"
-    for name, v in CHAR_VOICES.items():
-        if name in character:
-            voice = v
-            break
+def _do_tts(text, character="", voice=None):
+    if voice is None:
+        voice = "onyx"
+        for name, v in CHAR_VOICES.items():
+            if name in character:
+                voice = v
+                break
     payload = {"model": "elm-tts", "input": text, "voice": voice}
     response = requests.post(
         f"{BASE_URL}/v1/audio/speech",
@@ -92,11 +95,19 @@ def text_to_speech(text, character=""):
     with open("reply.mp3", "wb") as f:
         f.write(response.content)
 
+def tts_background(text, character="", voice=None):
+    tts_event.clear()
+    try:
+        _do_tts(text, character, voice)
+    except Exception as e:
+        print(f"[tts_bg] error: {e}")
+    finally:
+        tts_event.set()
+
 def speech_to_text(audio_file):
     with tempfile.NamedTemporaryFile(suffix=".input", delete=False) as tmp_in:
         audio_file.save(tmp_in.name)
         tmp_in_path = tmp_in.name
-
     tmp_out_path = tmp_in_path + ".wav"
     try:
         subprocess.run(
@@ -112,7 +123,7 @@ def speech_to_text(audio_file):
                 files=files,
                 timeout=30
             )
-        print(f"[stt] status={response.status_code}, body={response.text[:200]}")
+        print(f"[stt] status={response.status_code}")
         return response.json()["text"]
     finally:
         os.unlink(tmp_in_path)
@@ -123,21 +134,20 @@ def speech_to_text(audio_file):
 def home():
     return render_template('index.html')
 
+@app.route('/audio-ready')
+def audio_ready():
+    ready = tts_event.wait(timeout=15)
+    return jsonify({"ready": ready})
+
 @app.route('/narrate', methods=['POST'])
 def narrate():
     try:
         data = request.json
         text = data.get('text', '')
         voice = data.get('voice', 'shimmer')
-        payload = {"model": "elm-tts", "input": text, "voice": voice}
-        response = requests.post(f"{BASE_URL}/v1/audio/speech", headers=HEADERS, json=payload, timeout=30)
-        if response.status_code != 200:
-            return jsonify({"error": "tts failed"}), 500
-        with open("reply.mp3", "wb") as f:
-            f.write(response.content)
+        threading.Thread(target=tts_background, args=(text, "", voice), daemon=True).start()
         return jsonify({"ok": True})
     except Exception as e:
-        print(f"[/narrate] error: {e}")
         return jsonify({"error": str(e)}), 500
 
 @app.route('/greet', methods=['POST'])
@@ -147,7 +157,7 @@ def greet():
         character = data.get('character', 'أبو سعد التاجر')
         character_name = data.get('character_name', 'أبو سعد التاجر')
         greeting = f"أهلاً! أنا {character_name}. وش تبي تعرف؟"
-        text_to_speech(greeting, character)
+        threading.Thread(target=tts_background, args=(greeting, character), daemon=True).start()
         return jsonify({"greeting": greeting})
     except Exception as e:
         print(f"[/greet] error: {e}")
@@ -161,7 +171,7 @@ def ask():
         question = data['question']
         character = data.get('character', 'أبو سعد التاجر، تاجر عريق من الدرعية في القرن الثامن عشر')
         reply = ask_nuha(question, age, character)
-        text_to_speech(reply, character)
+        threading.Thread(target=tts_background, args=(reply, character), daemon=True).start()
         return jsonify({"reply": reply})
     except Exception as e:
         print(f"[/ask] error: {e}")
@@ -175,7 +185,7 @@ def ask_voice():
         audio = request.files['audio']
         question = speech_to_text(audio)
         reply = ask_nuha(question, age, character)
-        text_to_speech(reply, character)
+        threading.Thread(target=tts_background, args=(reply, character), daemon=True).start()
         return jsonify({"reply": reply, "question": question})
     except Exception as e:
         print(f"[/ask-voice] error: {e}")
@@ -207,4 +217,4 @@ def view_chat(chat_id):
     return render_template('chat_view.html', chat=chats[chat_id])
 
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=5000)
+    app.run(host='0.0.0.0', port=5000, threaded=True)
