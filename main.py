@@ -65,15 +65,26 @@ def ask_nuha(question, age, character):
         raise ValueError(f"API error: {data}")
     return data["choices"][0]["message"]["content"]
 
-def text_to_speech(text):
-    payload = {"model": "elm-tts", "input": text, "voice": "alloy"}
+CHAR_VOICES = {
+    "أبو سعد التاجر": "onyx",
+    "المعلم إبراهيم": "echo",
+    "الأمير سعود": "fable",
+}
+
+def text_to_speech(text, character=""):
+    voice = "onyx"
+    for name, v in CHAR_VOICES.items():
+        if name in character:
+            voice = v
+            break
+    payload = {"model": "elm-tts", "input": text, "voice": voice}
     response = requests.post(
         f"{BASE_URL}/v1/audio/speech",
         headers=HEADERS,
         json=payload,
         timeout=30
     )
-    print(f"[tts] status={response.status_code}, size={len(response.content)}")
+    print(f"[tts] status={response.status_code}, size={len(response.content)}, voice={voice}")
     if response.status_code != 200:
         raise ValueError(f"TTS error {response.status_code}: {response.text}")
     with open("reply.mp3", "wb") as f:
@@ -103,7 +114,7 @@ def ask():
         question = data['question']
         character = data.get('character', 'أبو سعد التاجر، تاجر عريق من الدرعية في القرن الثامن عشر')
         reply = ask_nuha(question, age, character)
-        text_to_speech(reply)
+        text_to_speech(reply, character)
         return jsonify({"reply": reply})
     except Exception as e:
         print(f"[/ask] error: {e}")
@@ -117,7 +128,7 @@ def ask_voice():
         audio = request.files['audio']
         question = speech_to_text(audio)
         reply = ask_nuha(question, age, character)
-        text_to_speech(reply)
+        text_to_speech(reply, character)
         return jsonify({"reply": reply, "question": question})
     except Exception as e:
         print(f"[/ask-voice] error: {e}")
