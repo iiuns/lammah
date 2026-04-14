@@ -32,7 +32,7 @@ def save_chat_to_file(chats):
 
 def get_style(age):
     if age < 15:
-        return "بسيطة ومسلية وقصيرة وكانك تحكي لطفل ، 3 جمل بس"
+        return "بسيطة ومسلية واستخدم مصطلحات لطيفه وكانك تحكي لطفل ، 3 جمل بس"
     elif age < 23:
         return "واضحة ومباشرة، 4-5 جمل"
     elif age < 38:
@@ -96,6 +96,7 @@ def _do_tts(text, character="", voice=None):
         f.write(response.content)
 
 def tts_background(text, character="", voice=None):
+        tts_event.wait()
     tts_event.clear()
     try:
         _do_tts(text, character, voice)
