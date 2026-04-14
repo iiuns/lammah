@@ -65,12 +65,12 @@ body{background:#F7F2EA;font-family:'Tajawal',sans-serif;min-height:100vh;displa
 .char-info-name{font-size:.88rem;font-weight:500;color:#C8962E}
 .char-info-sub{font-size:.65rem;color:#F5E6C8;opacity:.6}
 .age-pill{background:rgba(200,150,46,0.15);border:1px solid rgba(200,150,46,0.3);border-radius:20px;padding:.15rem .6rem;font-size:.65rem;color:#C8962E;margin-right:auto}
-.audio-toggle{width:34px;height:34px;border-radius:50%;border:1.5px solid rgba(200,150,46,0.5);background:transparent;display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;transition:all .2s;margin-right:.3rem}
-.audio-toggle:hover{background:rgba(200,150,46,0.15)}
-.audio-toggle svg{width:16px;height:16px;fill:#C8962E}
-.audio-toggle.speaking{background:rgba(200,150,46,0.2);border-color:#C8962E}
+.msg-audio-btn{display:flex;align-items:center;gap:.35rem;background:rgba(200,150,46,0.12);border:1.5px solid rgba(200,150,46,0.3);border-radius:20px;padding:.28rem .75rem;cursor:pointer;width:fit-content;transition:all .2s}
+.msg-audio-btn svg{width:14px;height:14px;fill:#C8962E;flex-shrink:0}
+.msg-audio-btn span{font-size:.7rem;color:#C8962E}
+.msg-audio-btn.speaking{background:rgba(200,150,46,0.22);border-color:#C8962E}
 @keyframes pulse-ring{0%{box-shadow:0 0 0 0 rgba(200,150,46,0.5)}70%{box-shadow:0 0 0 6px rgba(200,150,46,0)}100%{box-shadow:0 0 0 0 rgba(200,150,46,0)}}
-.audio-toggle.speaking{animation:pulse-ring 1.5s ease-out infinite}
+.msg-audio-btn.speaking{animation:pulse-ring 1.5s ease-out infinite}
 .chat-messages{flex:1;padding:1rem;display:flex;flex-direction:column;gap:.85rem;overflow-y:auto;background:#F7F2EA}
 .msg-char{background:white;border-radius:0 14px 14px 14px;padding:.8rem 1rem;font-size:.87rem;line-height:1.75;color:#2C1A08;max-width:88%;box-shadow:0 1px 4px rgba(0,0,0,0.06)}
 .msg-user{background:#C8962E;border-radius:14px 0 14px 14px;padding:.7rem 1rem;font-size:.87rem;color:white;max-width:78%;align-self:flex-start}
@@ -211,11 +211,6 @@ body{background:#F7F2EA;font-family:'Tajawal',sans-serif;min-height:100vh;displa
       <div class="char-info-name" id="chatName">أبو سعد التاجر</div>
       <div class="char-info-sub">الدرعية التاريخية</div>
     </div>
-    <div class="age-pill" id="agePill">25 سنة</div>
-    <button class="audio-toggle" id="audioToggleBtn" onclick="toggleAudio()" title="تشغيل / إيقاف الصوت">
-      <svg id="audioIconPlay" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M8 5v14l11-7z"/></svg>
-      <svg id="audioIconPause" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" style="display:none"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>
-    </button>
   </div>
   <div class="chat-messages" id="chatMessages"></div>
   <button class="another-btn" id="anotherBtn" style="display:none" onclick="askAnother()">هل عندك سؤال ثاني؟</button>
@@ -254,20 +249,18 @@ var isRecording = false;
 var mediaRecorder;
 var audioChunks = [];
 var currentAudio = null;
+var lastMsgAudioBtn = null;
+var SVG_PLAY = '<svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg><span>استمع</span>';
+var SVG_PAUSE = '<svg viewBox="0 0 24 24"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg><span>إيقاف</span>';
 
 function setAudioState(playing) {
-  var btn = document.getElementById('audioToggleBtn');
-  var iconPlay = document.getElementById('audioIconPlay');
-  var iconPause = document.getElementById('audioIconPause');
-  if (!btn) return;
+  if (!lastMsgAudioBtn) return;
   if (playing) {
-    btn.classList.add('speaking');
-    iconPlay.style.display = 'none';
-    iconPause.style.display = '';
+    lastMsgAudioBtn.innerHTML = SVG_PAUSE;
+    lastMsgAudioBtn.classList.add('speaking');
   } else {
-    btn.classList.remove('speaking');
-    iconPlay.style.display = '';
-    iconPause.style.display = 'none';
+    lastMsgAudioBtn.innerHTML = SVG_PLAY;
+    lastMsgAudioBtn.classList.remove('speaking');
   }
 }
 
@@ -275,10 +268,8 @@ function toggleAudio() {
   if (!currentAudio) return;
   if (currentAudio.paused) {
     currentAudio.play();
-    setAudioState(true);
   } else {
     currentAudio.pause();
-    setAudioState(false);
   }
 }
 
@@ -337,9 +328,10 @@ function selectChar(charFull,charName,emoji,el){
 async function startChat(){
   document.getElementById('chatAvatar').textContent = currentCharEmoji;
   document.getElementById('chatName').textContent = currentCharName;
-  document.getElementById('agePill').textContent = userAge+' سنة';
   document.getElementById('chatMessages').innerHTML = '';
   messages = [];
+  lastMsgAudioBtn = null;
+  if (currentAudio) { currentAudio.pause(); currentAudio = null; }
   showScreen('screen-chat');
   try {
     var res = await fetch('/greet', {
@@ -361,12 +353,13 @@ function addMessage(type,text){
   div.textContent = text;
   document.getElementById('chatMessages').appendChild(div);
   if(type==='char'){
-    var sound = document.createElement('div');
-    sound.className = 'sound-row';
-    sound.innerHTML = '<span>🔊 استمع</span>';
-    var audioUrl = '/audio?t=' + Date.now();
-    sound.onclick = function(){ new Audio(audioUrl).play(); };
-    document.getElementById('chatMessages').appendChild(sound);
+    if(lastMsgAudioBtn) lastMsgAudioBtn.innerHTML = SVG_PLAY;
+    var btn = document.createElement('button');
+    btn.className = 'msg-audio-btn';
+    btn.innerHTML = SVG_PLAY;
+    btn.onclick = toggleAudio;
+    document.getElementById('chatMessages').appendChild(btn);
+    lastMsgAudioBtn = btn;
   }
   document.getElementById('chatMessages').scrollTop = 99999;
   messages.push({role: type==='char'?'assistant':'user', content: text});
