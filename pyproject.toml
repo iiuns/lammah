@@ -1,7 +1,7 @@
 [project]
-name = "python-template"
+name = "Lammah-hackathon"
 version = "0.1.0"
 description = ""
-authors = ["Your Name <you@example.com>"]
+authors = ["Lammah <Lammah@example.com>"]
 requires-python = ">=3.11"
 dependencies = []
