@@ -281,7 +281,16 @@ setInterval(function(){
   for(var i=0;i<3;i++) document.getElementById('dot'+i).className = 'dot'+(i===imgIndex?' active':'');
 },4000);
 
+var audioCancelToken = 0;
+
+function stopAllAudio(){
+  audioCancelToken++;
+  if(currentAudio){ currentAudio.pause(); currentAudio = null; }
+  setAudioState(false);
+}
+
 function showScreen(id){
+  stopAllAudio();
   var screens = document.querySelectorAll('.screen');
   for(var i=0;i<screens.length;i++) screens[i].classList.remove('active');
   document.getElementById(id).classList.add('active');
@@ -296,7 +305,7 @@ async function goToAge(){
     fetch('/narrate', {
       method: 'POST',
       headers: {'Content-Type': 'application/json'},
-      body: JSON.stringify({text: 'كم عمرك؟ اختر الفئة المناسبة لك حتى نخصص لك تجربة تناسبك', voice: 'shimmer'})
+      body: JSON.stringify({text: 'كم عمرك؟', voice: 'shimmer'})
     });
     waitAndPlayAudio();
   } catch(e) {}
@@ -366,9 +375,11 @@ function addMessage(type,text){
 }
 
 async function waitAndPlayAudio(){
+  var token = audioCancelToken;
   try {
     await fetch('/audio-ready');
-    if (currentAudio) { currentAudio.pause(); currentAudio = null; }
+    if(audioCancelToken !== token) return;
+    if(currentAudio){ currentAudio.pause(); currentAudio = null; }
     currentAudio = new Audio('/audio?t=' + Date.now());
     currentAudio.onplay = function(){ setAudioState(true); };
     currentAudio.onpause = function(){ setAudioState(false); };
