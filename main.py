@@ -32,13 +32,13 @@ def save_chat_to_file(chats):
 
 def get_style(age):
     if age < 15:
-        return "بسيطة ومسلية واستخدم مصطلحات لطيفه وكانك تحكي لطفل ، 3 جمل بس"
+        return "بسيطة ومسلية واستخدم مصطلحات لطيفه وكانك تحكي لطفل ابدا كلامك ب يا ولدي ، 3 جمل بس"
     elif age < 23:
         return "واضحة ومباشرة، 4-5 جمل"
     elif age < 38:
         return "كافية ومعلوماتية، 5-6 جمل"
     else:
-        return "مفصلة وعميقة، 6-7 جمل"
+        return "مفصلة وعميقة وابدا كلامك ب يا غالي او وانا اخوك، 6-7 جمل"
 
 def ask_nuha(question, age, character):
     style = get_style(age)
