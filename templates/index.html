@@ -305,7 +305,7 @@ async function goToAge(){
     fetch('/narrate', {
       method: 'POST',
       headers: {'Content-Type': 'application/json'},
-      body: JSON.stringify({text: 'كم عمرك؟', voice: 'shimmer'})
+      body: JSON.stringify({text: 'اختر عمرك عشان نخصص لك تجربه مناسبه', voice: 'shimmer'})
     });
     waitAndPlayAudio();
   } catch(e) {}
