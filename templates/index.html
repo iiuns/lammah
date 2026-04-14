@@ -65,6 +65,12 @@ body{background:#F7F2EA;font-family:'Tajawal',sans-serif;min-height:100vh;displa
 .char-info-name{font-size:.88rem;font-weight:500;color:#C8962E}
 .char-info-sub{font-size:.65rem;color:#F5E6C8;opacity:.6}
 .age-pill{background:rgba(200,150,46,0.15);border:1px solid rgba(200,150,46,0.3);border-radius:20px;padding:.15rem .6rem;font-size:.65rem;color:#C8962E;margin-right:auto}
+.audio-toggle{width:34px;height:34px;border-radius:50%;border:1.5px solid rgba(200,150,46,0.5);background:transparent;display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;transition:all .2s;margin-right:.3rem}
+.audio-toggle:hover{background:rgba(200,150,46,0.15)}
+.audio-toggle svg{width:16px;height:16px;fill:#C8962E}
+.audio-toggle.speaking{background:rgba(200,150,46,0.2);border-color:#C8962E}
+@keyframes pulse-ring{0%{box-shadow:0 0 0 0 rgba(200,150,46,0.5)}70%{box-shadow:0 0 0 6px rgba(200,150,46,0)}100%{box-shadow:0 0 0 0 rgba(200,150,46,0)}}
+.audio-toggle.speaking{animation:pulse-ring 1.5s ease-out infinite}
 .chat-messages{flex:1;padding:1rem;display:flex;flex-direction:column;gap:.85rem;overflow-y:auto;background:#F7F2EA}
 .msg-char{background:white;border-radius:0 14px 14px 14px;padding:.8rem 1rem;font-size:.87rem;line-height:1.75;color:#2C1A08;max-width:88%;box-shadow:0 1px 4px rgba(0,0,0,0.06)}
 .msg-user{background:#C8962E;border-radius:14px 0 14px 14px;padding:.7rem 1rem;font-size:.87rem;color:white;max-width:78%;align-self:flex-start}
@@ -206,6 +212,10 @@ body{background:#F7F2EA;font-family:'Tajawal',sans-serif;min-height:100vh;displa
       <div class="char-info-sub">الدرعية التاريخية</div>
     </div>
     <div class="age-pill" id="agePill">25 سنة</div>
+    <button class="audio-toggle" id="audioToggleBtn" onclick="toggleAudio()" title="تشغيل / إيقاف الصوت">
+      <svg id="audioIconPlay" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M8 5v14l11-7z"/></svg>
+      <svg id="audioIconPause" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" style="display:none"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>
+    </button>
   </div>
   <div class="chat-messages" id="chatMessages"></div>
   <button class="another-btn" id="anotherBtn" style="display:none" onclick="askAnother()">هل عندك سؤال ثاني؟</button>
@@ -243,6 +253,34 @@ var messages = [];
 var isRecording = false;
 var mediaRecorder;
 var audioChunks = [];
+var currentAudio = null;
+
+function setAudioState(playing) {
+  var btn = document.getElementById('audioToggleBtn');
+  var iconPlay = document.getElementById('audioIconPlay');
+  var iconPause = document.getElementById('audioIconPause');
+  if (!btn) return;
+  if (playing) {
+    btn.classList.add('speaking');
+    iconPlay.style.display = 'none';
+    iconPause.style.display = '';
+  } else {
+    btn.classList.remove('speaking');
+    iconPlay.style.display = '';
+    iconPause.style.display = 'none';
+  }
+}
+
+function toggleAudio() {
+  if (!currentAudio) return;
+  if (currentAudio.paused) {
+    currentAudio.play();
+    setAudioState(true);
+  } else {
+    currentAudio.pause();
+    setAudioState(false);
+  }
+}
 
 var images = ['/static/img1.jpg','/static/img2.jpg','/static/img3.jpg'];
 var imgIndex = 0;
@@ -337,7 +375,12 @@ function addMessage(type,text){
 async function waitAndPlayAudio(){
   try {
     await fetch('/audio-ready');
-    new Audio('/audio?t=' + Date.now()).play();
+    if (currentAudio) { currentAudio.pause(); currentAudio = null; }
+    currentAudio = new Audio('/audio?t=' + Date.now());
+    currentAudio.onplay = function(){ setAudioState(true); };
+    currentAudio.onpause = function(){ setAudioState(false); };
+    currentAudio.onended = function(){ setAudioState(false); };
+    currentAudio.play();
   } catch(e) {}
 }
 
