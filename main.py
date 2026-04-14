@@ -32,7 +32,7 @@ def save_chat_to_file(chats):
 
 def get_style(age):
     if age < 15:
-        return "بسيطة ومسلية وقصيرة، 3 جمل بس"
+        return "بسيطة ومسلية وقصيرة وكانك تحكي لطفل ، 3 جمل بس"
     elif age < 23:
         return "واضحة ومباشرة، 4-5 جمل"
     elif age < 38:
