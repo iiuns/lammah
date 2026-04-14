@@ -98,7 +98,7 @@ def _do_tts(text, character="", voice=None):
         f.write(response.content)
 
 def tts_background(text, character="", voice=None):
-        tts_event.wait()
+    tts_event.wait()
     tts_event.clear()
     try:
         _do_tts(text, character, voice)
